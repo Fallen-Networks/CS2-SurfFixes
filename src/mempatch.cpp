@@ -66,6 +66,53 @@ bool CMemPatch::PerformPatch(CGameConfig *gameConfig)
 	return true;
 }
 
+
+bool CMemPatch::PerformPatchTest(CGameConfig* gameConfig)
+{
+	// We're patched already
+	if (m_pOriginalBytes)
+		return true;
+
+	// If we already have an address, no need to look for it again
+	if (!m_pPatchAddress)
+	{
+		m_pPatchAddress = (uintptr_t)gameConfig->ResolveSignature(m_pSignatureName);
+
+		if (!m_pPatchAddress)
+			return false;
+	}
+
+	const char* patch = gameConfig->GetPatch(m_pszName);
+	if (!patch)
+	{
+		Panic("Failed to find patch for %s\n", m_pszName);
+		return false;
+	}
+	m_pPatch = gameConfig->HexToByte(patch, m_iPatchLength);
+	if (!m_pPatch)
+		return false;
+
+	if (V_strcmp(m_pOffsetName, ""))
+	{
+		m_iOffset = gameConfig->GetOffset(m_pOffsetName);
+		if (m_iOffset == -1)
+		{
+			Panic("Failed to find offset %s for patch %s\n", m_pOffsetName, m_pszName);
+			return false;
+		}
+
+		m_pPatchAddress += m_iOffset;
+	}
+
+	m_pOriginalBytes = new byte[m_iPatchLength];
+	V_memcpy(m_pOriginalBytes, (void*)m_pPatchAddress, m_iPatchLength);
+
+	Plat_WriteMemory((void*)m_pPatchAddress, (byte*)m_pPatch, m_iPatchLength);
+
+	Message("Patched %s at %p\n", m_pszName, m_pPatchAddress);
+	return true;
+}
+
 void CMemPatch::UndoPatch()
 {
 	if (!m_pPatchAddress)

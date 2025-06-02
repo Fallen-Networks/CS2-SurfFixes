@@ -183,6 +183,7 @@
     <ClCompile Include="src\detours.cpp" />
     <ClCompile Include="src\gameconfig.cpp" />
     <ClCompile Include="src\mempatch.cpp" />
+    <ClCompile Include="src\patches.cpp" />
     <ClCompile Include="src\playermanager.cpp" />
     <ClCompile Include="sdk\tier1\convar.cpp" />
     <ClCompile Include="src\utils\entity.cpp" />
@@ -218,6 +219,7 @@
     <ClInclude Include="src\gameconfig.h" />
     <ClInclude Include="src\mempatch.h" />
     <ClInclude Include="src\addresses.h" />
+    <ClCompile Include="src\patches.cpp" />
     <ClInclude Include="src\playermanager.h" />
     <ClInclude Include="src\recipientfilters.h" />
     <ClInclude Include="src\serversideclient.h" />

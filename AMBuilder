@@ -2,8 +2,8 @@
 import os
 import subprocess
 
-MMSPlugin.plugin_name = 'cs2fixes-rampbugfix'
-MMSPlugin.plugin_alias = 'cs2fixes-rampbugfix'
+MMSPlugin.plugin_name = 'CS2-SurfFixes'
+MMSPlugin.plugin_alias = 'CS2-SurfFixes'
 
 for sdk_target in MMSPlugin.sdk_targets:
   sdk = sdk_target.sdk

@@ -37,7 +37,7 @@ public:
 		m_iPatchLength = 0;
 		m_iOffset = 0;
 	}
-
+	bool PerformPatchTest(CGameConfig *gameConfig);
 	bool PerformPatch(CGameConfig *gameConfig);
 	void UndoPatch();
 
