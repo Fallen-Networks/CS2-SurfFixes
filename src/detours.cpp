@@ -29,6 +29,7 @@
 #include "entity/ccsplayerpawn.h"
 #include "entity/cbasemodelentity.h"
 #include "entity/cgamerules.h"
+#include "entity/ctriggerpush.h"
 #include "entity/services.h"
 #include "playermanager.h"
 #include "igameevents.h"

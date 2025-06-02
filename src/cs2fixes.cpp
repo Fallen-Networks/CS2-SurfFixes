@@ -23,6 +23,7 @@
 #include "appframework/IAppSystem.h"
 #include "common.h"
 #include "detours.h"
+#include "patches.h"
 #include "icvar.h"
 #include "interface.h"
 #include "tier0/dbg.h"
