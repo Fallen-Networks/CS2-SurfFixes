@@ -47,10 +47,86 @@ extern CCSGameRules *g_pGameRules;
 
 CUtlVector<CDetourBase *> g_vecDetours;
 
+DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch);
 DECLARE_DETOUR(ProcessMovement, Detour_ProcessMovement);
 DECLARE_DETOUR(TryPlayerMove, Detour_TryPlayerMove);
 DECLARE_DETOUR(CategorizePosition, Detour_CategorizePosition);
+DECLARE_DETOUR(CNavMesh_GetNearestNavArea, Detour_CNavMesh_GetNearestNavArea);
 
+void* FASTCALL Detour_CNavMesh_GetNearestNavArea(int64_t unk1, float* unk2, unsigned int* unk3, unsigned int unk4, int64_t unk5, int64_t unk6, float unk7, int64_t unk8)
+{
+	bool g_bBlockNavLookup = true;
+	if (g_bBlockNavLookup)
+		return nullptr;
+
+	return CNavMesh_GetNearestNavArea(unk1, unk2, unk3, unk4, unk5, unk6, unk7, unk8);
+}
+
+void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, Z_CBaseEntity* pOther)
+{
+	// This trigger pushes only once (and kills itself) or pushes only on StartTouch, both of which are fine already
+	if (pPush->m_spawnflags() & SF_TRIG_PUSH_ONCE || pPush->m_bTriggerOnStartTouch())
+	{
+		TriggerPush_Touch(pPush, pOther);
+		return;
+	}
+
+	MoveType_t movetype = pOther->m_nActualMoveType();
+
+	// VPhysics handling doesn't need any changes
+	if (movetype == MOVETYPE_VPHYSICS)
+	{
+		TriggerPush_Touch(pPush, pOther);
+		return;
+	}
+
+	if (movetype == MOVETYPE_NONE || movetype == MOVETYPE_PUSH || movetype == MOVETYPE_NOCLIP)
+		return;
+
+	CCollisionProperty* collisionProp = pOther->m_pCollision();
+	if (!IsSolid(collisionProp->m_nSolidType(), collisionProp->m_usSolidFlags()))
+		return;
+
+	if (!pPush->PassesTriggerFilters(pOther))
+		return;
+
+	if (pOther->m_CBodyComponent()->m_pSceneNode()->m_pParent())
+		return;
+
+	Vector vecAbsDir;
+
+	matrix3x4_t mat = pPush->m_CBodyComponent()->m_pSceneNode()->EntityToWorldTransform();
+
+	Vector pushDir = pPush->m_vecPushDirEntitySpace();
+
+	// i had issues with vectorrotate on linux so i did it here
+	vecAbsDir.x = pushDir.x * mat[0][0] + pushDir.y * mat[0][1] + pushDir.z * mat[0][2];
+	vecAbsDir.y = pushDir.x * mat[1][0] + pushDir.y * mat[1][1] + pushDir.z * mat[1][2];
+	vecAbsDir.z = pushDir.x * mat[2][0] + pushDir.y * mat[2][1] + pushDir.z * mat[2][2];
+
+	Vector vecPush = vecAbsDir * pPush->m_flSpeed();
+
+	uint32 flags = pOther->m_fFlags();
+
+	if (flags & (FL_BASEVELOCITY))
+	{
+		vecPush = vecPush + pOther->m_vecBaseVelocity();
+	}
+
+	if (vecPush.z > 0 && (flags & FL_ONGROUND))
+	{
+		addresses::SetGroundEntity(pOther, nullptr);
+		Vector origin = pOther->GetAbsOrigin();
+		origin.z += 1.0f;
+
+		pOther->Teleport(&origin, nullptr, nullptr);
+	}
+
+	pOther->m_vecBaseVelocity(vecPush);
+
+	flags |= (FL_BASEVELOCITY);
+	pOther->m_fFlags(flags);
+}
 
 void FASTCALL Detour_ProcessMovement(CCSPlayer_MovementServices *pThis, void *pMove)
 {

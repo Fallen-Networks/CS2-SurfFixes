@@ -54,6 +54,7 @@ for sdk_target in MMSPlugin.sdk_targets:
   binary.sources += [
     'src/cs2fixes.cpp',
     'src/mempatch.cpp',
+    'src/patches.cpp',
     'src/addresses.cpp',
     'src/detours.cpp',
     'src/utils/entity.cpp',
